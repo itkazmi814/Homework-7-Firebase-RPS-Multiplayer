@@ -15,7 +15,8 @@ Next Steps
 2.Results Function 
   a. record wins/losses
   b. reset to pick choice screen
-3.Handle player closing the browser and waiting for new opponent
+3.Establish proper DOM manipulation functions
+4..Handle player closing the browser and waiting for new opponent
 */
 
 /*
@@ -55,7 +56,7 @@ function addNewPlayer () {
   // currentNumberPlayers++;
   if(sessionStorage.getItem("myPlayerNum") === null ){
    
-   sessionStorage.setItem("myPlayerNum",currentNumberPlayers)
+   sessionStorage.setItem("myPlayerNum",(currentNumberPlayers+1));
   
     var newName = $("#name-input").val().trim();
 
