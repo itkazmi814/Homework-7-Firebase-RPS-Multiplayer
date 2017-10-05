@@ -4,9 +4,7 @@ PARKING LOT
   -Automatically remove player on disconnect
     -Reassign remaining player to P1
 -When Player 2 loads the web page, do NOT clear the database
--When Displaying buttons
-  -Find a way to not have to use .empty()
-  -Currently running display function twice
+-Add timeout to limit 
 */
 
 /*
@@ -39,45 +37,45 @@ firebase.initializeApp(config);
 //main database that will hold player information
 var database = firebase.database();
 
+// '.info/connected' is a special location provided by Firebase that is updated every time
+// the client's connection state changes.
+// '.info/connected' is a boolean value, true if the client is connected and false if they are not.
+var connectedRef = database.ref(".info/connected");
+
+connectedRef.on("value",function(snap) {
+  if(snap.val()) {
+    var con = database.ref("players").push(true);
+    sessionStorage.setItem("myKey",con.key)
+    con.onDisconnect().remove();
+  }
+})
+
 var currentNumberPlayers = 0;
-var compareChoices = false;
  
 function initializeDatabase () {
   //reset global variables (booleans, counters, etc.)
-  database.ref("global").set({
-    numPlayers: 0
-  })
+
   //clear out all player information
   database.ref("/players").set({})
   sessionStorage.clear()
 }
 
 function addNewPlayer () {
-  // currentNumberPlayers++;
-  if(sessionStorage.getItem("myPlayerNum") === null ){
-   
-   sessionStorage.setItem("myPlayerNum",(currentNumberPlayers+1));
-  
-    var newName = $("#name-input").val().trim();
-
-    database.ref("players/"+(currentNumberPlayers+1)).update({
-      name: newName,
-      choice: ""
-    })
-
-  }else{
-    console.log("Please wait for another player")
-  }
-  
 }
 
 function submitButtonPressed () {
   console.log("Enter function submitButtonPressed")
-  
-  if(currentNumberPlayers < 2){
-    addNewPlayer();
-  }else{
+  if(currentNumberPlayers >1){
     console.log("Cannot add new players"); 
+  }else{
+    var myIdentifier = sessionStorage.getItem("myKey");
+    var newName = $("#name-input").val().trim();
+    database.ref("players/"+myIdentifier).update({
+      name: newName,
+      choice: "",
+      wins: 0,
+      losses: 0
+    })
   }
 }
 
@@ -92,23 +90,11 @@ function rpsButtonPressed () {
   })
 
   $("#instructions").text("You chose " + newChoice)
-
 }
 
-database.ref("players").on("value",function(snapshot){
-  console.log("Taking a snapshot of /players/")
-  console.log(snapshot.val())
-  currentNumberPlayers = snapshot.numChildren();
-  console.log("Current # of players: " + snapshot.numChildren());
-
-  var mySessStorage = sessionStorage.getItem("myPlayerNum");
-  console.log("numChildren: "+snapshot.numChildren())
-
-  if(snapshot.numChildren() === 2){
-    displayButtons()
-  }
-
-})
+function compareChoices (){
+  console.log("entering compareChoices")
+}
 
 function displayButtons () {
   console.log("displaying buttons");
@@ -137,8 +123,38 @@ function displayButtons () {
 
   $("#instructions").empty();
   $("#instructions").text("Choose R P S")
-
 }
+
+database.ref("players").on("value",function(snapshot){
+ 
+  console.log("Taking a snapshot of /players/")
+  console.log(snapshot.val())
+  currentNumberPlayers = snapshot.numChildren();
+  console.log("Current # of players: " + snapshot.numChildren());
+  // var mySessStorage = sessionStorage.getItem("myPlayerNum");
+  console.log("numChildren: "+snapshot.numChildren())
+
+  
+  //checks if you should display RPS buttons
+  if(snapshot.numChildren() === 2
+      && snapshot.val()[1].choice === ""
+      && snapshot.val()[2].choice === ""){
+    displayButtons()
+  }  
+  compareChoices();
+  //check if ready to compare RPS choice
+  if(snapshot.val()[1].choice !== "" && snapshot.val()[2].choice !== ""){
+  //   console.log("time to compare");
+    var p1choice = snapshot.val()[1].choice;
+    var p2choice = snapshot.val()[2].choice;
+    console.log("p1 chose: " + p1choice)  
+    console.log("p2choice: " + p2choice)
+    compareChoices(p1choice,p2choice);
+        
+
+  }
+
+})
 
 initializeDatabase();
 $(document).on("click","#submit-btn",submitButtonPressed);
