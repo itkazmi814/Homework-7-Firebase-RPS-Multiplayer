@@ -90,6 +90,13 @@ function rpsButtonPressed () {
  
 
   if(!readyToCompare){
+    /*the timing of when this code runs is 
+    causing an issue where the player's choice 
+    displays after the function displaysResults has already 
+    been displayed. this overrides the display on one of player's
+    screens and makes it such that they do not know the results of
+     the game
+    */
     database.ref("players/" + myIdentifier).update({
       choice: newChoice
     })
@@ -166,7 +173,8 @@ function displayResults(){
   
 }
 
-
+//this is the main function that calls the other functions of the program
+//any time a value changes, the function checks if the conditions are met to run the function to advance the game
 database.ref("players").on("value",function(snapshot){
  
   console.log("Taking a snapshot of /players/")
