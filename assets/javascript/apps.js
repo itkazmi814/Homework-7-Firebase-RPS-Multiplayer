@@ -1,8 +1,5 @@
 /*
 PARKING LOT
--Monitoring connections
-  -Automatically remove player on disconnect
-    -Reassign remaining player to P1
 -When Player 2 loads the web page, do NOT clear the database
 -Add timeout to limit 
 */
@@ -83,18 +80,27 @@ function rpsButtonPressed () {
   console.log("rps button pressed");
   var newChoice = $(this).attr("data-value");
   console.log(newChoice + " pressed")
-  var myIdentifier = sessionStorage.getItem("myPlayerNum");
+  var myIdentifier = sessionStorage.getItem("myKey");
 
   database.ref("players/" + myIdentifier).update({
     choice: newChoice
   })
 
+  database.ref("comparisons").update({
+    myIdentifier: myIdentifier+newChoice
+  })
   $("#instructions").text("You chose " + newChoice)
 }
 
-function compareChoices (){
+function compareChoices (snapshot){
   console.log("entering compareChoices")
-}
+  console.log(snapshot.val())
+  // var p1choice = snapshot.val()[1].choice;
+  // var p2choice = snapshot.val()[2].choice;
+  // console.log("p1 chose: " + p1choice)  
+  // console.log("p2choice: " + p2choice)
+  //compare choices
+  }
 
 function displayButtons () {
   console.log("displaying buttons");
@@ -126,40 +132,36 @@ function displayButtons () {
 }
 
 database.ref("players").on("value",function(snapshot){
- 
   console.log("Taking a snapshot of /players/")
   console.log(snapshot.val())
+  console.log("Testing w/ snapshot...");
+  // console.log(snapshot.val().keys())
   currentNumberPlayers = snapshot.numChildren();
-  console.log("Current # of players: " + snapshot.numChildren());
-  // var mySessStorage = sessionStorage.getItem("myPlayerNum");
-  console.log("numChildren: "+snapshot.numChildren())
-
+  // console.log("Current # of players: " + snapshot.numChildren());
+  // // var mySessStorage = sessionStorage.getItem("myPlayerNum");
+  // console.log("numChildren: "+snapshot.numChildren())
   
   //checks if you should display RPS buttons
-  if(snapshot.numChildren() === 2
-      && snapshot.val()[1].choice === ""
-      && snapshot.val()[2].choice === ""){
-    displayButtons()
-  }  
-  compareChoices();
+  // if(snapshot.numChildren() === 2
+  //     && snapshot.val()[1].choice === ""
+  //     && snapshot.val()[2].choice === ""){
+  //   displayButtons()
+  // }  
+ 
   //check if ready to compare RPS choice
+  c
   if(snapshot.val()[1].choice !== "" && snapshot.val()[2].choice !== ""){
-  //   console.log("time to compare");
-    var p1choice = snapshot.val()[1].choice;
-    var p2choice = snapshot.val()[2].choice;
-    console.log("p1 chose: " + p1choice)  
-    console.log("p2choice: " + p2choice)
-    compareChoices(p1choice,p2choice);
-        
+    console.log("time to compare");
+    compareChoices(snapshot);  
 
+    
   }
-
 })
 
 initializeDatabase();
 $(document).on("click","#submit-btn",submitButtonPressed);
-
 $(document).on("click",".rps-btn",rpsButtonPressed)
+displayButtons()
   
 // database.ref("players/1").update({
 //   name: "imran p1",
